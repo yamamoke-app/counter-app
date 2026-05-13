@@ -14,13 +14,27 @@ body {
   margin: 10px;
 }
 
+/* セクション余白 */
 .section {
   margin: 20px 0;
 }
 
+/* 横並び */
 .row {
   display: flex;
   justify-content: center;
+  gap: 6px;
+}
+
+/* 共通ボタン */
+button {
+  font-size: 18px;
+  padding: 12px;
+  margin: 4px;
+  border-radius: 14px;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 /* 男女 */
@@ -42,22 +56,13 @@ body {
   width: 18%;
 }
 
-/* 共通 */
-button {
-  font-size: 18px;
-  padding: 12px;
-  margin: 4px;
-  border-radius: 12px;
-  border: none;
-}
-
-/* 選択 */
+/* 選択状態 */
 .selected {
   background: #4caf50;
   color: white;
 }
 
-/* 操作 */
+/* 登録 */
 .register {
   width: 90%;
   font-size: 26px;
@@ -66,6 +71,7 @@ button {
   color: white;
 }
 
+/* 下段 */
 .undo {
   background: #f44336;
   color: white;
@@ -91,6 +97,7 @@ button {
   color: white;
 }
 
+/* 無効 */
 button:disabled {
   opacity: 0.4;
 }
@@ -107,14 +114,14 @@ button:disabled {
   <button onclick="select('gender','女',this)">女</button>
 </div>
 
-<!-- 学年 -->
+<!-- 学年（横並び） -->
 <div class="section row row-3">
   <button onclick="select('grade','1年',this)">1年</button>
   <button onclick="select('grade','2年',this)">2年</button>
   <button onclick="select('grade','3年',this)">3年</button>
 </div>
 
-<!-- 同伴 -->
+<!-- 同伴（5択） -->
 <div class="section row row-5">
   <button onclick="select('companion','なし',this)">なし</button>
   <button onclick="select('companion','保護者',this)">保護者</button>
@@ -136,7 +143,7 @@ button:disabled {
 
 <h3 id="count">合計: 0</h3>
 
-<!-- ✅ ここが今回の追加 -->
+<!-- 集計 -->
 <div class="section">
   <button class="statsBtn" onclick="toggleStats()">集計を見る</button><br><br>
   <button class="exportBtn" onclick="exportCSV()">集計を書き出す</button>
@@ -162,13 +169,13 @@ function select(type, value, btn) {
   updateRegisterState();
 }
 
-/* 登録制御 */
+/* 登録ボタン制御 */
 function updateRegisterState() {
   document.getElementById("registerBtn").disabled =
     !(current.gender && current.grade && current.companion);
 }
 
-/* 登録 */
+/* 登録 → 保存 → リロード */
 function register() {
   data.push({ ...current, time: Date.now() });
   localStorage.setItem("logs", JSON.stringify(data));
@@ -181,12 +188,13 @@ function register() {
 /* 取り消し */
 function undo() {
   if (data.length === 0) return;
+
   data.pop();
   localStorage.setItem("logs", JSON.stringify(data));
   updateCount();
 }
 
-/* クリア */
+/* 画面クリア */
 function clearScreen() {
   location.reload();
 }
@@ -228,7 +236,7 @@ function showStats() {
   `;
 }
 
-/* ✅ CSV書き出し */
+/* CSV書き出し */
 function exportCSV() {
   let csv = "性別,学年,同伴,時間\n";
 
@@ -244,7 +252,7 @@ function exportCSV() {
   link.click();
 }
 
-/* SW */
+/* Service Worker */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
