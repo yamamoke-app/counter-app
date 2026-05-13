@@ -14,70 +14,68 @@ body {
   margin: 10px;
 }
 
-/* 横並び共通 */
+/* 各ブロックの余白（←ここが今回のポイント） */
+.section {
+  margin: 20px 0;
+}
+
+/* 横並び */
 .row {
   display: flex;
   justify-content: center;
-  gap: 6px;
 }
 
-/* 男女 */
+/* 男女（2分割） */
 .row-2 button {
   width: 45%;
-  font-size: 26px;
-  padding: 20px;
+  font-size: 28px;
+  padding: 25px;
 }
 
-/* 学年（横3つ） */
+/* 学年（3分割） */
 .row-3 button {
   width: 30%;
   font-size: 20px;
-  padding: 16px;
+  padding: 18px;
 }
 
-/* 同伴（4つ） */
-.row-4 button {
-  width: 22%;
+/* 同伴（5分割） */
+.row-5 button {
+  width: 18%;
 }
 
-/* 共通ボタン */
+/* 共通 */
 button {
   font-size: 18px;
   padding: 12px;
-  border-radius: 12px; /* ← 常に角丸 */
-  border: none;
+  margin: 4px;
 }
 
-/* 選択状態（角丸維持） */
+/* 選択状態 */
 .selected {
   background: #4caf50;
   color: white;
-  border-radius: 12px;
 }
 
-/* 登録（大） */
+/* 操作ボタン */
 .register {
   width: 90%;
   font-size: 26px;
   padding: 20px;
   background: #4caf50;
   color: white;
-  border-radius: 12px;
 }
 
-/* 下ボタン */
 .undo {
   background: #f44336;
   color: white;
   width: 45%;
-  border-radius: 12px;
 }
 
 .clear {
   background: #00bcd4;
   color: white;
   width: 45%;
-  border-radius: 12px;
 }
 
 /* 無効 */
@@ -92,35 +90,34 @@ button:disabled {
 <h2>来場者カウント</h2>
 
 <!-- ✅ 男女 -->
-<div class="row row-2">
+<div class="section row row-2">
   <button onclick="select('gender','男',this)">男</button>
   <button onclick="select('gender','女',this)">女</button>
 </div>
 
-<!-- ✅ 学年（横並び修正済み） -->
-<div class="row row-3">
+<!-- ✅ 学年 -->
+<div class="section row row-3">
   <button onclick="select('grade','1年',this)">1年</button>
   <button onclick="select('grade','2年',this)">2年</button>
   <button onclick="select('grade','3年',this)">3年</button>
 </div>
 
 <!-- ✅ 同伴 -->
-<div class="row row-4">
+<div class="section row row-5">
+  <button onclick="select('companion','なし',this)">なし</button>
   <button onclick="select('companion','保護者',this)">保護者</button>
   <button onclick="select('companion','友達',this)">友達</button>
   <button onclick="select('companion','先生',this)">先生</button>
   <button onclick="select('companion','その他',this)">その他</button>
 </div>
 
-<br>
-
-<!-- ✅ 登録（単独） -->
-<button id="registerBtn" class="register" onclick="register()" disabled>登録</button>
-
-<br><br>
+<!-- ✅ 登録 -->
+<div class="section">
+  <button id="registerBtn" class="register" onclick="register()" disabled>登録</button>
+</div>
 
 <!-- ✅ 下段 -->
-<div class="row">
+<div class="section row">
   <button class="undo" onclick="undo()">取り消し</button>
   <button class="clear" onclick="clearScreen()">画面クリア</button>
 </div>
@@ -137,7 +134,7 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 updateCount();
 updateRegisterState();
 
-/* ✅ 選択 */
+// ✅ 選択
 function select(type, value, btn) {
   let parent = btn.parentElement;
   parent.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
@@ -148,29 +145,23 @@ function select(type, value, btn) {
   updateRegisterState();
 }
 
-/* ✅ 登録ボタン制御 */
+// ✅ 登録ボタン制御
 function updateRegisterState() {
   const btn = document.getElementById("registerBtn");
   btn.disabled = !(current.gender && current.grade && current.companion);
 }
 
-/* ✅ 登録 */
+// ✅ 登録（→保存→リロード）
 function register() {
   data.push({ ...current, time: Date.now() });
   localStorage.setItem("logs", JSON.stringify(data));
 
-  updateCount();
-
   if (navigator.vibrate) navigator.vibrate(50);
 
-  // ✅ 選択リセット（角丸維持）
-  current = {};
-  document.querySelectorAll(".selected").forEach(b => b.classList.remove("selected"));
-
-  updateRegisterState();
+  location.reload();
 }
 
-/* ✅ 取り消し */
+// ✅ 取り消し
 function undo() {
   if (data.length === 0) return;
 
@@ -179,17 +170,17 @@ function undo() {
   updateCount();
 }
 
-/* ✅ 画面クリア */
+// ✅ 画面クリア
 function clearScreen() {
   location.reload();
 }
 
-/* ✅ 合計 */
+// ✅ 合計
 function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
-/* ✅ 集計 */
+// ✅ 集計
 function toggleStats() {
   let div = document.getElementById("stats");
 
@@ -205,7 +196,7 @@ function showStats() {
   let stats = {
     男: 0, 女: 0,
     "1年": 0, "2年": 0, "3年": 0,
-    保護者: 0, 友達: 0, 先生: 0, その他: 0
+    なし: 0, 保護者: 0, 友達: 0, 先生: 0, その他: 0
   };
 
   data.forEach(d => {
@@ -217,11 +208,11 @@ function showStats() {
   document.getElementById("stats").innerHTML = `
     <p>男: ${stats["男"]} / 女: ${stats["女"]}</p>
     <p>1年: ${stats["1年"]} / 2年: ${stats["2年"]} / 3年: ${stats["3年"]}</p>
-    <p>保護者: ${stats["保護者"]} / 友達: ${stats["友達"]} / 先生: ${stats["先生"]} / その他: ${stats["その他"]}</p>
+    <p>なし: ${stats["なし"]} / 保護者: ${stats["保護者"]} / 友達: ${stats["友達"]} / 先生: ${stats["先生"]} / その他: ${stats["その他"]}</p>
   `;
 }
 
-/* ✅ Service Worker */
+// ✅ Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
