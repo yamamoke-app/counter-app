@@ -10,12 +10,15 @@
 <style>
 body { font-family: sans-serif; text-align: center; }
 button {
-  font-size: 20px;
-  padding: 15px;
+  font-size: 18px;
+  padding: 12px;
   margin: 5px;
   width: 30%;
 }
-.selected { background: #4caf50; color: white; }
+.selected {
+  background: #4caf50;
+  color: white;
+}
 </style>
 </head>
 
@@ -23,20 +26,20 @@ button {
 
 <h2>来場者カウント</h2>
 
-<div>
-  <button onclick="select('gender','男')">男</button>
-  <button onclick="select('gender','女')">女</button>
+<div id="gender">
+  <button onclick="toggle('gender','男', this)">男</button>
+  <button onclick="toggle('gender','女', this)">女</button>
 </div>
 
-<div>
-  <button onclick="select('grade','1年')">1年</button>
-  <button onclick="select('grade','2年')">2年</button>
-  <button onclick="select('grade','3年')">3年</button>
+<div id="grade">
+  <button onclick="toggle('grade','1年', this)">1年</button>
+  <button onclick="toggle('grade','2年', this)">2年</button>
+  <button onclick="toggle('grade','3年', this)">3年</button>
 </div>
 
-<div>
-  <button onclick="select('companion','保護者')">保護者</button>
-  <button onclick="select('companion','友達')">友達</button>
+<div id="companion">
+  <button onclick="toggle('companion','保護者', this)">保護者</button>
+  <button onclick="toggle('companion','友達', this)">友達</button>
 </div>
 
 <br>
@@ -44,7 +47,9 @@ button {
 
 <h3 id="count">合計: 0</h3>
 
-<button onclick="exportCSV()">CSV出力</button>
+<button onclick="toggleStats()">集計を見る</button>
+
+<div id="stats" style="display:none;"></div>
 
 <script>
 let current = {};
@@ -52,38 +57,76 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 
 updateCount();
 
-function select(type, value) {
-  current[type] = value;
+// ✅ ボタン選択＆解除
+function toggle(type, value, btn) {
+  let parent = btn.parentElement;
+  let buttons = parent.querySelectorAll("button");
+
+  if (current[type] === value) {
+    // もう一度押したら解除
+    current[type] = null;
+    btn.classList.remove("selected");
+  } else {
+    // 他をリセットして選択
+    buttons.forEach(b => b.classList.remove("selected"));
+    current[type] = value;
+    btn.classList.add("selected");
+  }
 }
 
+// ✅ 登録
 function register() {
   if (!current.gender || !current.grade || !current.companion) {
     alert("全部選択してください");
     return;
   }
 
-  data.push({ ...current, time: Date.now() });
+  data.push({ ...current });
   localStorage.setItem("logs", JSON.stringify(data));
 
   current = {};
+  document.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+
   updateCount();
 }
 
+// ✅ 合計表示
 function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
-function exportCSV() {
-  let csv = "gender,grade,companion\n";
+// ✅ 集計表示
+function toggleStats() {
+  let div = document.getElementById("stats");
+
+  if (div.style.display === "none") {
+    div.style.display = "block";
+    showStats();
+  } else {
+    div.style.display = "none";
+  }
+}
+
+function showStats() {
+  let stats = {
+    男: 0, 女: 0,
+    "1年": 0, "2年": 0, "3年": 0,
+    保護者: 0, 友達: 0
+  };
+
   data.forEach(d => {
-    csv += `${d.gender},${d.grade},${d.companion}\n`;
+    stats[d.gender]++;
+    stats[d.grade]++;
+    stats[d.companion]++;
   });
 
-  let blob = new Blob([csv], { type: "text/csv" });
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "data.csv";
-  a.click();
+  let html = `
+    <p>男: ${stats["男"]} / 女: ${stats["女"]}</p>
+    <p>1年: ${stats["1年"]} / 2年: ${stats["2年"]} / 3年: ${stats["3年"]}</p>
+    <p>保護者: ${stats["保護者"]} / 友達: ${stats["友達"]}</p>
+  `;
+
+  document.getElementById("stats").innerHTML = html;
 }
 
 if ('serviceWorker' in navigator) {
