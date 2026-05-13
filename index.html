@@ -14,19 +14,16 @@ body {
   margin: 10px;
 }
 
-/* セクション余白（スマホ最適） */
 .section {
   margin: 10px 0;
 }
 
-/* 横並び */
 .row {
   display: flex;
   justify-content: center;
   gap: 6px;
 }
 
-/* 共通ボタン */
 button {
   font-size: 18px;
   padding: 12px;
@@ -84,7 +81,7 @@ button {
   width: 45%;
 }
 
-/* ✅ 色調整（今回の指定） */
+/* 集計 */
 .statsBtn {
   width: 90%;
   background: #c2185b; /* 赤紫 */
@@ -97,7 +94,13 @@ button {
   color: white;
 }
 
-/* 無効 */
+/* 全削除 */
+.resetBtn {
+  width: 90%;
+  background: #000;
+  color: white;
+}
+
 button:disabled {
   opacity: 0.4;
 }
@@ -140,7 +143,8 @@ button:disabled {
 
 <div class="section">
   <button class="statsBtn" onclick="toggleStats()">集計を見る</button><br><br>
-  <button class="exportBtn" onclick="exportCSV()">集計を書き出す</button>
+  <button class="exportBtn" onclick="exportCSV()">集計を書き出す</button><br><br>
+  <button class="resetBtn" onclick="resetData()">全データ削除</button>
 </div>
 
 <div id="stats" style="display:none;"></div>
@@ -152,6 +156,7 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 updateCount();
 updateRegisterState();
 
+/* 選択 */
 function select(type, value, btn) {
   let parent = btn.parentElement;
   parent.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
@@ -160,18 +165,23 @@ function select(type, value, btn) {
   updateRegisterState();
 }
 
+/* 登録ボタン制御 */
 function updateRegisterState() {
   document.getElementById("registerBtn").disabled =
     !(current.gender && current.grade && current.companion);
 }
 
+/* 登録 */
 function register() {
   data.push({ ...current, time: Date.now() });
   localStorage.setItem("logs", JSON.stringify(data));
+
   if (navigator.vibrate) navigator.vibrate(50);
+
   location.reload();
 }
 
+/* 取り消し */
 function undo() {
   if (data.length === 0) return;
   data.pop();
@@ -179,16 +189,20 @@ function undo() {
   updateCount();
 }
 
+/* 画面クリア */
 function clearScreen() {
   location.reload();
 }
 
+/* 合計 */
 function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
+/* 集計 */
 function toggleStats() {
   let div = document.getElementById("stats");
+
   if (div.style.display === "none") {
     div.style.display = "block";
     showStats();
@@ -217,8 +231,10 @@ function showStats() {
   `;
 }
 
+/* CSV */
 function exportCSV() {
   let csv = "性別,学年,同伴,時間\n";
+
   data.forEach(d => {
     let date = new Date(d.time).toLocaleString();
     csv += `${d.gender},${d.grade},${d.companion},${date}\n`;
@@ -231,6 +247,15 @@ function exportCSV() {
   link.click();
 }
 
+/* ✅ 全削除 */
+function resetData() {
+  if (!confirm("すべてのデータを削除します。本当にいいですか？")) return;
+
+  localStorage.removeItem("logs");
+  location.reload();
+}
+
+/* SW */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }

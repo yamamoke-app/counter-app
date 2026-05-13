@@ -5,7 +5,6 @@ const urlsToCache = [
   "./manifest.json"
 ];
 
-// インストール
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -14,7 +13,6 @@ self.addEventListener("install", event => {
   );
 });
 
-// 取得
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
