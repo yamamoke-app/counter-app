@@ -14,9 +14,9 @@ body {
   margin: 10px;
 }
 
-/* セクション余白 */
+/* セクション余白（スマホ最適） */
 .section {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 
 /* 横並び */
@@ -51,7 +51,7 @@ button {
   padding: 18px;
 }
 
-/* 同伴（5つ） */
+/* 同伴 */
 .row-5 button {
   width: 18%;
 }
@@ -84,16 +84,16 @@ button {
   width: 45%;
 }
 
-/* 集計系 */
+/* ✅ 色調整（今回の指定） */
 .statsBtn {
-  width: 80%;
-  background: #607d8b;
+  width: 90%;
+  background: #c2185b; /* 赤紫 */
   color: white;
 }
 
 .exportBtn {
-  width: 80%;
-  background: #795548;
+  width: 90%;
+  background: #7b1fa2; /* 紫 */
   color: white;
 }
 
@@ -108,20 +108,17 @@ button:disabled {
 
 <h2>来場者カウント</h2>
 
-<!-- 男女 -->
 <div class="section row row-2">
   <button onclick="select('gender','男',this)">男</button>
   <button onclick="select('gender','女',this)">女</button>
 </div>
 
-<!-- 学年（横並び） -->
 <div class="section row row-3">
   <button onclick="select('grade','1年',this)">1年</button>
   <button onclick="select('grade','2年',this)">2年</button>
   <button onclick="select('grade','3年',this)">3年</button>
 </div>
 
-<!-- 同伴（5択） -->
 <div class="section row row-5">
   <button onclick="select('companion','なし',this)">なし</button>
   <button onclick="select('companion','保護者',this)">保護者</button>
@@ -130,12 +127,10 @@ button:disabled {
   <button onclick="select('companion','その他',this)">その他</button>
 </div>
 
-<!-- 登録 -->
 <div class="section">
   <button id="registerBtn" class="register" onclick="register()" disabled>登録</button>
 </div>
 
-<!-- 下段 -->
 <div class="section row">
   <button class="undo" onclick="undo()">取り消し</button>
   <button class="clear" onclick="clearScreen()">画面クリア</button>
@@ -143,7 +138,6 @@ button:disabled {
 
 <h3 id="count">合計: 0</h3>
 
-<!-- 集計 -->
 <div class="section">
   <button class="statsBtn" onclick="toggleStats()">集計を見る</button><br><br>
   <button class="exportBtn" onclick="exportCSV()">集計を書き出す</button>
@@ -158,56 +152,43 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 updateCount();
 updateRegisterState();
 
-/* 選択 */
 function select(type, value, btn) {
   let parent = btn.parentElement;
   parent.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
-
   current[type] = value;
   btn.classList.add("selected");
-
   updateRegisterState();
 }
 
-/* 登録ボタン制御 */
 function updateRegisterState() {
   document.getElementById("registerBtn").disabled =
     !(current.gender && current.grade && current.companion);
 }
 
-/* 登録 → 保存 → リロード */
 function register() {
   data.push({ ...current, time: Date.now() });
   localStorage.setItem("logs", JSON.stringify(data));
-
   if (navigator.vibrate) navigator.vibrate(50);
-
   location.reload();
 }
 
-/* 取り消し */
 function undo() {
   if (data.length === 0) return;
-
   data.pop();
   localStorage.setItem("logs", JSON.stringify(data));
   updateCount();
 }
 
-/* 画面クリア */
 function clearScreen() {
   location.reload();
 }
 
-/* 合計 */
 function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
-/* 集計表示 */
 function toggleStats() {
   let div = document.getElementById("stats");
-
   if (div.style.display === "none") {
     div.style.display = "block";
     showStats();
@@ -236,10 +217,8 @@ function showStats() {
   `;
 }
 
-/* CSV書き出し */
 function exportCSV() {
   let csv = "性別,学年,同伴,時間\n";
-
   data.forEach(d => {
     let date = new Date(d.time).toLocaleString();
     csv += `${d.gender},${d.grade},${d.companion},${date}\n`;
@@ -252,7 +231,6 @@ function exportCSV() {
   link.click();
 }
 
-/* Service Worker */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
