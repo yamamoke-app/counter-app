@@ -14,50 +14,50 @@ body {
   margin: 10px;
 }
 
-/* 横並び */
+.section {
+  margin: 20px 0;
+}
+
 .row {
   display: flex;
   justify-content: center;
-  gap: 6px;
-}
-
-/* ボタン共通（←ここ重要：見た目を完全統一） */
-button {
-  font-size: 18px;
-  padding: 12px;
-  border-radius: 14px;
-  border: none;
-  appearance: none;
-  -webkit-appearance: none;
 }
 
 /* 男女 */
 .row-2 button {
   width: 45%;
-  font-size: 26px;
-  padding: 20px;
+  font-size: 28px;
+  padding: 25px;
 }
 
 /* 学年 */
 .row-3 button {
   width: 30%;
   font-size: 20px;
-  padding: 16px;
+  padding: 18px;
 }
 
-/* 同伴 */
-.row-4 button {
-  width: 22%;
+/* 同伴（5つ） */
+.row-5 button {
+  width: 18%;
 }
 
-/* 選択状態（角丸維持） */
+/* 共通 */
+button {
+  font-size: 18px;
+  padding: 12px;
+  margin: 4px;
+  border-radius: 12px;
+  border: none;
+}
+
+/* 選択 */
 .selected {
   background: #4caf50;
   color: white;
-  border-radius: 14px;
 }
 
-/* 登録 */
+/* 操作 */
 .register {
   width: 90%;
   font-size: 26px;
@@ -66,7 +66,6 @@ button {
   color: white;
 }
 
-/* 下ボタン */
 .undo {
   background: #f44336;
   color: white;
@@ -79,14 +78,19 @@ button {
   width: 45%;
 }
 
-/* 書き出し */
-.export {
-  background: #673ab7;
+/* 集計系 */
+.statsBtn {
+  width: 80%;
+  background: #607d8b;
   color: white;
-  width: 90%;
 }
 
-/* 無効 */
+.exportBtn {
+  width: 80%;
+  background: #795548;
+  color: white;
+}
+
 button:disabled {
   opacity: 0.4;
 }
@@ -98,20 +102,20 @@ button:disabled {
 <h2>来場者カウント</h2>
 
 <!-- 男女 -->
-<div class="row row-2">
+<div class="section row row-2">
   <button onclick="select('gender','男',this)">男</button>
   <button onclick="select('gender','女',this)">女</button>
 </div>
 
 <!-- 学年 -->
-<div class="row row-3">
+<div class="section row row-3">
   <button onclick="select('grade','1年',this)">1年</button>
   <button onclick="select('grade','2年',this)">2年</button>
   <button onclick="select('grade','3年',this)">3年</button>
 </div>
 
 <!-- 同伴 -->
-<div class="row row-4">
+<div class="section row row-5">
   <button onclick="select('companion','なし',this)">なし</button>
   <button onclick="select('companion','保護者',this)">保護者</button>
   <button onclick="select('companion','友達',this)">友達</button>
@@ -119,25 +123,26 @@ button:disabled {
   <button onclick="select('companion','その他',this)">その他</button>
 </div>
 
-<br>
-
 <!-- 登録 -->
-<button id="registerBtn" class="register" onclick="register()" disabled>登録</button>
-
-<br><br>
+<div class="section">
+  <button id="registerBtn" class="register" onclick="register()" disabled>登録</button>
+</div>
 
 <!-- 下段 -->
-<div class="row">
+<div class="section row">
   <button class="undo" onclick="undo()">取り消し</button>
   <button class="clear" onclick="clearScreen()">画面クリア</button>
 </div>
 
-<br>
-
-<!-- ✅ 追加：書き出し -->
-<button class="export" onclick="exportCSV()">集計を書き出す</button>
-
 <h3 id="count">合計: 0</h3>
+
+<!-- ✅ ここが今回の追加 -->
+<div class="section">
+  <button class="statsBtn" onclick="toggleStats()">集計を見る</button><br><br>
+  <button class="exportBtn" onclick="exportCSV()">集計を書き出す</button>
+</div>
+
+<div id="stats" style="display:none;"></div>
 
 <script>
 let current = {};
@@ -157,10 +162,10 @@ function select(type, value, btn) {
   updateRegisterState();
 }
 
-/* 登録ボタン制御 */
+/* 登録制御 */
 function updateRegisterState() {
-  const btn = document.getElementById("registerBtn");
-  btn.disabled = !(current.gender && current.grade && current.companion);
+  document.getElementById("registerBtn").disabled =
+    !(current.gender && current.grade && current.companion);
 }
 
 /* 登録 */
@@ -176,13 +181,12 @@ function register() {
 /* 取り消し */
 function undo() {
   if (data.length === 0) return;
-
   data.pop();
   localStorage.setItem("logs", JSON.stringify(data));
   updateCount();
 }
 
-/* 画面クリア */
+/* クリア */
 function clearScreen() {
   location.reload();
 }
@@ -192,10 +196,40 @@ function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
+/* 集計表示 */
+function toggleStats() {
+  let div = document.getElementById("stats");
+
+  if (div.style.display === "none") {
+    div.style.display = "block";
+    showStats();
+  } else {
+    div.style.display = "none";
+  }
+}
+
+function showStats() {
+  let stats = {
+    男: 0, 女: 0,
+    "1年": 0, "2年": 0, "3年": 0,
+    なし: 0, 保護者: 0, 友達: 0, 先生: 0, その他: 0
+  };
+
+  data.forEach(d => {
+    stats[d.gender]++;
+    stats[d.grade]++;
+    stats[d.companion]++;
+  });
+
+  document.getElementById("stats").innerHTML = `
+    <p>男: ${stats["男"]} / 女: ${stats["女"]}</p>
+    <p>1年: ${stats["1年"]} / 2年: ${stats["2年"]} / 3年: ${stats["3年"]}</p>
+    <p>なし: ${stats["なし"]} / 保護者: ${stats["保護者"]} / 友達: ${stats["友達"]} / 先生: ${stats["先生"]} / その他: ${stats["その他"]}</p>
+  `;
+}
+
 /* ✅ CSV書き出し */
 function exportCSV() {
-  if (data.length === 0) return;
-
   let csv = "性別,学年,同伴,時間\n";
 
   data.forEach(d => {
@@ -210,7 +244,7 @@ function exportCSV() {
   link.click();
 }
 
-/* Service Worker */
+/* SW */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
