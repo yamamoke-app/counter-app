@@ -8,8 +8,13 @@
 <link rel="manifest" href="manifest.json">
 
 <style>
-body { font-family: sans-serif; text-align: center; }
+body {
+  font-family: sans-serif;
+  text-align: center;
+  margin: 10px;
+}
 
+/* 男女の大ボタン */
 .big {
   font-size: 28px;
   padding: 25px;
@@ -17,12 +22,14 @@ body { font-family: sans-serif; text-align: center; }
   width: 40%;
 }
 
+/* 通常ボタン */
 button {
   font-size: 18px;
   padding: 10px;
   margin: 5px;
 }
 
+/* 選択状態 */
 .selected {
   background: #4caf50;
   color: white;
@@ -34,7 +41,7 @@ button {
 
 <h2>来場者カウント</h2>
 
-<!-- ✅ 男女カウンター（大ボタン） -->
+<!-- ✅ 男女（大ボタン） -->
 <div>
   <button class="big" onclick="quickAdd('男')">男</button>
   <button class="big" onclick="quickAdd('女')">女</button>
@@ -47,7 +54,7 @@ button {
   <button onclick="select('grade','3年',this)">3年</button>
 </div>
 
-<!-- ✅ 同伴者 -->
+<!-- ✅ 同伴者（先生追加） -->
 <div id="companion">
   <button onclick="select('companion','保護者',this)">保護者</button>
   <button onclick="select('companion','友達',this)">友達</button>
@@ -56,8 +63,13 @@ button {
 
 <h3 id="count">合計: 0</h3>
 
-<button onclick="undo()">取り消し</button>
-<button onclick="clearScreen()">画面クリア</button>
+<!-- ✅ 操作ボタン -->
+<div>
+  <button onclick="undo()">取り消し</button>
+  <button onclick="clearScreen()">画面クリア</button>
+</div>
+
+<br>
 
 <button onclick="toggleStats()">集計を見る</button>
 <div id="stats" style="display:none;"></div>
@@ -68,7 +80,7 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 
 updateCount();
 
-// ✅ 選択（保持される）
+/* ✅ 学年・同伴者の選択（保持される） */
 function select(type, value, btn) {
   let parent = btn.parentElement;
   parent.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
@@ -77,7 +89,7 @@ function select(type, value, btn) {
   btn.classList.add("selected");
 }
 
-// ✅ 男女押すだけで登録
+/* ✅ 男女ボタンで即登録 */
 function quickAdd(gender) {
   if (!current.grade || !current.companion) {
     alert("学年と同伴者を選んでください");
@@ -87,7 +99,8 @@ function quickAdd(gender) {
   let entry = {
     gender: gender,
     grade: current.grade,
-    companion: current.companion
+    companion: current.companion,
+    time: Date.now()
   };
 
   data.push(entry);
@@ -95,28 +108,30 @@ function quickAdd(gender) {
 
   updateCount();
 
-  // 軽く振動（対応端末のみ）
+  // バイブ（対応端末のみ）
   if (navigator.vibrate) navigator.vibrate(50);
 }
 
-// ✅ 合計
+/* ✅ 合計表示 */
 function updateCount() {
   document.getElementById("count").innerText = "合計: " + data.length;
 }
 
-// ✅ 取り消し（直前1件削除）
+/* ✅ 取り消し（最後の1件削除） */
 function undo() {
+  if (data.length === 0) return;
+
   data.pop();
   localStorage.setItem("logs", JSON.stringify(data));
   updateCount();
 }
 
-// ✅ 画面クリア（リロード）
+/* ✅ 画面クリア（リロード） */
 function clearScreen() {
   location.reload();
 }
 
-// ✅ 集計
+/* ✅ 集計表示 */
 function toggleStats() {
   let div = document.getElementById("stats");
 
@@ -150,8 +165,11 @@ function showStats() {
   document.getElementById("stats").innerHTML = html;
 }
 
+/* ✅ Service Worker登録 */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update();
+  });
 }
 </script>
 
