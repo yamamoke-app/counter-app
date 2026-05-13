@@ -19,6 +19,10 @@ button {
   background: #4caf50;
   color: white;
 }
+.danger {
+  background: #f44336;
+  color: white;
+}
 </style>
 </head>
 
@@ -26,29 +30,30 @@ button {
 
 <h2>来場者カウント</h2>
 
-<div id="gender">
+<div>
   <button onclick="toggle('gender','男', this)">男</button>
   <button onclick="toggle('gender','女', this)">女</button>
 </div>
 
-<div id="grade">
+<div>
   <button onclick="toggle('grade','1年', this)">1年</button>
   <button onclick="toggle('grade','2年', this)">2年</button>
   <button onclick="toggle('grade','3年', this)">3年</button>
 </div>
 
-<div id="companion">
+<div>
   <button onclick="toggle('companion','保護者', this)">保護者</button>
   <button onclick="toggle('companion','友達', this)">友達</button>
 </div>
 
 <br>
+
 <button onclick="register()">登録</button>
+<button class="danger" onclick="undo()">取り消し</button>
 
 <h3 id="count">合計: 0</h3>
 
 <button onclick="toggleStats()">集計を見る</button>
-
 <div id="stats" style="display:none;"></div>
 
 <script>
@@ -57,18 +62,15 @@ let data = JSON.parse(localStorage.getItem("logs") || "[]");
 
 updateCount();
 
-// ✅ ボタン選択＆解除
+// ✅ 選択（もう一度押すと解除）
 function toggle(type, value, btn) {
-  let parent = btn.parentElement;
-  let buttons = parent.querySelectorAll("button");
+  let group = btn.parentElement.querySelectorAll("button");
 
   if (current[type] === value) {
-    // もう一度押したら解除
     current[type] = null;
     btn.classList.remove("selected");
   } else {
-    // 他をリセットして選択
-    buttons.forEach(b => b.classList.remove("selected"));
+    group.forEach(b => b.classList.remove("selected"));
     current[type] = value;
     btn.classList.add("selected");
   }
@@ -81,12 +83,21 @@ function register() {
     return;
   }
 
-  data.push({ ...current });
+  data.push({ ...current, time: Date.now() });
   localStorage.setItem("logs", JSON.stringify(data));
 
-  current = {};
-  document.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+  // バイブ（対応端末のみ）
+  if (navigator.vibrate) navigator.vibrate(50);
 
+  updateCount();
+}
+
+// ✅ 取り消し（最後の1件削除）
+function undo() {
+  if (data.length === 0) return;
+
+  data.pop();
+  localStorage.setItem("logs", JSON.stringify(data));
   updateCount();
 }
 
@@ -120,17 +131,18 @@ function showStats() {
     stats[d.companion]++;
   });
 
-  let html = `
+  document.getElementById("stats").innerHTML = `
     <p>男: ${stats["男"]} / 女: ${stats["女"]}</p>
     <p>1年: ${stats["1年"]} / 2年: ${stats["2年"]} / 3年: ${stats["3年"]}</p>
     <p>保護者: ${stats["保護者"]} / 友達: ${stats["友達"]}</p>
   `;
-
-  document.getElementById("stats").innerHTML = html;
 }
 
+// ✅ Service Worker登録（更新反映強化）
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update();
+  });
 }
 </script>
 
